@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        // Create Blob with the about:blank generator code
+        const blobContent = `<!DOCTYPE html>
+<html>
+    <head>
+        <title>about:blank cool</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 20px;
+                background: #f0f0f0;
+            }
+            input, button {
+                padding: 10px;
+                margin: 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            button {
+                background: #007acc;
+                color: white;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #005a9e;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>about:blank SCREEN HIDER</h2>
+        <p>SOME URLS DONT WORK!!!!!!!!!!!!!</p>
+        <input type="text" value="https://fischy6734.github.io/BM/" placeholder="https://fischy6734.github.io/BM/" id='input' autofocus>
+        <button onclick='create()'>Create!</button>
+        
+        <script>
+        function create() {
+            var url = document.getElementById('input').value;
+            var win = window.open();
+            win.document.body.style.margin = '0';
+            win.document.body.style.height = '100vh';
+            var iframe = win.document.createElement('iframe');
+            iframe.style.border = 'none';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.margin = '0';
+            iframe.src = url;
+            win.document.body.appendChild(iframe);
+        }
+        <\/script>
+    </body>
+</html>`;
+        
+        const blob = new Blob([blobContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.location.replace(url);
+    </script>
+</head>
+<body>
+</body>
+</html>
