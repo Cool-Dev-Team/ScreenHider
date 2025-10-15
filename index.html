@@ -2,121 +2,288 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Key‑Auth via Name List (no visible list)</title>
+<title>Secure Key‑Auth – Full Tier Experience</title>
+<link href="https://fonts.cdnfonts.com/css/inter" rel="stylesheet">
 <style>
-  body{font-family:Arial,sans-serif;display:flex;justify-content:center;
-       align-items:center;height:100vh;margin:0;background:#f4f4f4;}
-  .card{background:white;border:1px solid #ccc;border-radius:8px;
-        width:350px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  h2{margin-top:0;text-align:center;}
-  h3{margin-top:0;text-align:center;}
-  input{width:100%;padding:10px;margin:10px 0;
-        box-sizing:border-box;border:1px solid #ccc;border-radius:4px;}
-  button{width:100%;padding:10px;border:none;border-radius:4px;
-        background:#28a745;color:white;cursor:pointer;}
-  button:hover{background:#218838;}
-  #msg{margin-top:12px;padding:10px;border-radius:4px;}
-  .error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}
+:root{ --font:'Inter',sans-serif; --radius:8px; --wrapper:680px; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:#f4f4f4;
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;}
+.card{background:#fff;border-radius:var(--radius);
+      padding:2rem;width:100%;max-width:440px;
+      box-shadow:0 4px 12px rgba(0,0,0,.05);text-align:center;}
+h2{margin-bottom:1rem;font-size:1.75rem;}
+h3{margin-bottom:.5rem;font-size:.95rem;color:#555;}
+input{width:100%;padding:.75rem 1rem;margin:1rem 0;
+      font-size:.95rem;border:1px solid #ccc;border-radius:var(--radius);
+      transition:border-color .2s,box-shadow .2s;}
+input:focus{outline:none;border-color:#28a745;
+            box-shadow:0 0 4px #28a745;}
+button{width:100%;padding:.75rem 1rem;font-size:.95rem;
+       color:#fff;background:#28a745;border:none;
+       border-radius:var(--radius);cursor:pointer;
+       transition:background .2s,transform .1s;}
+button:hover{background:#218838;transform:scale(1.02);}
+#msg{min-height:1.8rem;margin-top:.75rem;padding:.5rem 1rem;
+      border-radius:var(--radius);font-size:.9rem;
+      display:flex;justify-content:center;align-items:center;}
+#msg.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}
+/* ---------- 6. Target page global styles ---------- */
+#wrapper{max-width:var(--wrapper);margin:auto;display:flex;
+         flex-direction:column;align-items:center;gap:1rem;}
+button.smallBtn{background:#6c757d;color:#fff;padding:.4rem .8rem;
+                border:none;border-radius:6px;margin:0 .3rem;
+                cursor:pointer;font-size:.85rem;}
+button.smallBtn:hover{background:#5a6268;}
+button.upgrade{margin-top:1.2rem;background:#ffc107;border:none;
+               color:#222;font-weight:bold;border-radius:8px;}
+button.bgToggle{margin-top:1rem;background:#28a745;color:#fff;border:none;
+                border-radius:8px;padding:.6rem 1.2rem;font-size:.95rem;
+                cursor:pointer;}
+button.bgToggle:hover{background:#218838;}
+/* FAQ section */
+.faq{margin-top:1.5rem;text-align:left;width:90%;}
+.faq h4{margin:0;padding:.6rem 0;cursor:pointer;border-bottom:1px solid #ddd;}
+.faq-content{display:none;padding:.4rem 0;border-left:3px solid #17a2b8;}
 </style>
 </head>
 <body>
-
 <div class="card" id="auth">
   <h2>Authenticate</h2>
-  <h3>If you want a key, email  </h3>
-  <h3> 5137455873@student.cms.k12.nc.us </h3>
-  <h3> (I NEED A KEY) and he will get back to you as soon as he can</h3>
-  <input type="text" id="keyInput" placeholder="Enter the key you received">
-  <button id="authBtn">Authenticate</button>
-  <div id="msg"></div>
+  <h3>If you want a key, email</h3>
+  <h3>5137455873@student.cms.k12.nc.us</h3>
+  <h3>(I NEED A KEY) and he will get back to you as soon as he can</h3>
+
+  <input type="text" id="keyInput" placeholder="Enter your key" aria-label="Key input">
+  <button id="authBtn" aria-label="Authenticate">Authenticate</button>
+  <div id="msg" role="alert"></div>
 </div>
 
 <script>
-/* ---------- 1. Hidden list of authorised names -------------------- */
-const authorisedNames = [
-  "Fischer",
-  "Colton",
-  "Brantley",
-  "Free-Key",
-  "Aubrey",
-  "joseph",
-  "liam",
+/* ---------- 1. Name → Tier (hidden) ---------- */
+const authorised = [
+  {name:"Fischer",   tier:"Overlord"},
+  {name:"Colton",    tier:"Overlord"},
+  {name:"Brantley",  tier:"Overlord"},
+  {name:"test",      tier:"Basic"},
+  {name:"Brantley_Friend_Key",       tier:"Friend"},
+  {name:"Cove",   tier:"Overlord"},
+  {name:"Cove_Friend_Key",      tier:"Friend"}
 ];
 
-/* ---------- 2. SHA‑256 helper ------------------------------------ */
-async function sha256(str) {
+/* ---------- 2. Colour theme per tier ---------- */
+const tierStyles = {
+  Basic:     { primary:"#28a745", background:"#f4f4f4", text:"#222" },
+  Standard:  { primary:"#17a2b8", background:"#e9f7fd", text:"#222" },
+  Premium:   { primary:"#ffc107", background:"#fff3cd", text:"#222" },
+  Enterprise:{ primary:"#6c757d", background:"#e2e3e5", text:"#222" },
+  Unlimited: { primary:"#6f42c1", background:"#f5e0ff", text:"#222" },
+  Friend:      { primary:"#ff5722", background:"FF3131", text:"#222" },
+  Overlord:  { primary:"#e91e63", background:"#fde0e0", text:"#222" },
+  Owner:  { primary:"#e91e63", background:"#fde0e0", text:"#222" },
+};
+
+/* ---------- 3. Features per tier ---------- */
+const tierFeatures = {
+  Basic: [
+    "Nothing Right Now",
+    "Limited support"
+  ],
+  Standard: [
+    "Nothing Right Now",
+  ],
+  Premium: [
+    "Nothing Right Now",
+  ],
+  Enterprise: [
+    "Nothing Right Now",
+  ],
+  Unlimited: [
+    "Nothing Right Now",
+  ],
+  Friend: [
+    "Nothing Right Now",
+  ],
+  Overlord: [
+    "Nothing Right Now",
+  ]
+};
+
+/* ---------- 4. Tier‑specific actions ---------- */
+const tierActions = {
+  Basic:    [],
+  Standard: [],
+  Premium:  ["execChannel",""],
+  Enterprise:["execChannel"],
+  Unlimited:["execChannel"],
+  Friend:     ["execChannel"],
+  Overlord: ["execChannel"]
+};
+
+/* ---------- 5. SHA‑256 helper ---------- */
+async function sha256(str){
   const encoder = new TextEncoder();
-  /* note: the string must be the ASCII hyphen, not a dash/‑ character */
   const hash = await crypto.subtle.digest('SHA-256', encoder.encode(str));
   return Array.from(new Uint8Array(hash))
-      .map(b => b.toString(16).padStart(2,'0')).join('');
+    .map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-/* ---------- 3. The page to show after successful login --------- */
-const targetPage = `<!DOCTYPE html>
-<html>
-<head>
-  <title>about:blank ScreenHider</title>
-</head>
+/* ---------- 6. Generate target page ---------- */
+function makeTargetPage(name,tier){
+  const style = tierStyles[tier];
+  const features = tierFeatures[tier].map(f=>`<li style="margin:.4rem 0;text-align:left;">${f}</li>`).join('');
+  const actions = tierActions[tier].map(action=>{
+    switch(action){
+      case "downloadReport": return `<button class="smallBtn" onclick="downloadCSV()">Download Report</button>`;
+      case "shareLink": return `<button class="smallBtn" onclick="copyLink()">Copy Share Link</button>`;
+      case "dashboardAccess": return `<button class="smallBtn" onclick="alert('Dashboard coming soon')">Dashboard</button>`;
+      case "apiKeyGen": return `<button class="smallBtn" onclick="alert('API key generated')">Generate API Key</button>`;
+      case "mlIntegration": return `<button class="smallBtn" onclick="alert('ML integration ready')">ML Integration</button>`;
+      case "execChannel": return `<button class="smallBtn" ">Nothing Right Now</button>`;
+      default: return '';
+    }
+  }).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Welcome</title>
 <style>
-  .body { align-items: center; }
-  .text-box { font-size: 40px; align-items: center; border-radius: 15px; background-color: lightblue; border: 2px solid blue; }
-  .creat-btn { font-size: 40px; align-items: center; background-color: lightblue; border: 2px solid blue; }
-  button:hover { background-color: lightGreen; }
-</style>
+  body{font-family:Inter,sans-serif;margin:0;padding:0;
+        background:${style.background};color:${style.text};
+        display:flex;align-items:center;justify-content:center;
+        min-height:100vh}
+  #wrapper{max-width:var(--wrapper);margin:auto;display:flex;
+           flex-direction:column;align-items:center;gap:1rem;}
+  h1{font-size:2.6rem;margin:0 0 .3rem;}
+  h2{font-size:1.4rem;margin:0 0 .8rem;}
+  ul{list-style:none;padding:0;margin:0;max-width:600px; text-align:left;}
+  ul li{margin:.4rem 0;}
+  .text-box{width:80%;max-width:720px;display:block;margin:0 auto 1.75rem;
+            padding:.75rem 1rem;font-size:1.8rem;border:2px solid ${style.primary};
+            border-radius:8px;background:#e3f2fd;}
+  button{padding:.8rem 1.6rem;font-size:1.25rem;background:${style.primary};
+          color:#fff;border:none;border-radius:8px;cursor:pointer;
+          transition:.2s;gap:.4rem;display:flex;align-items:center;}
+  button:hover{background:${style.darker||'#5a36a5'};}
+  button:focus{outline:none;}
+  button.smallBtn{background:#6c757d;color:#fff;padding:.4rem .8rem;
+                  border:none;border-radius:6px;margin:0 .3rem;
+                  cursor:pointer;font-size:.85rem;}
+  button.smallBtn:hover{background:#5a6268;}
+  button.upgrade{margin-top:1.2rem;background:#ffc107;border:none;
+                 color:#222;font-weight:bold;border-radius:8px;}
+  button.bgToggle{margin-top:1rem;background:#28a745;color:#fff;border:none;
+                  border-radius:8px;padding:.6rem 1.2rem;font-size:.95rem;
+                  cursor:pointer;}
+  button.bgToggle:hover{background:#218838;}
+  .faq{margin-top:1.5rem;text-align:left;width:90%;}
+  .faq h4{margin:0;padding:.6rem 0;cursor:pointer;border-bottom:1px solid #ddd;}
+  .faq-content{display:none;padding:.4rem 0;border-left:3px solid #17a2b8;}
+</style></head>
 <body>
+<div id="wrapper">
+  <h1>Welcome, ${name}!</h1>
+  <h2>Your tier: <strong>${tier}</strong></h2>
+  <ul>${features}</ul>
+
   <script>
-    function create() {
-      var url = document.getElementById('input').value;
-      var win = window.open();
-      win.document.body.style.margin = '0';
-      win.document.body.style.height = '100vh';
-      var iframe = win.document.createElement('iframe');
-      iframe.style.border = 'none';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.margin = '0';
+    function create(){
+      const url = document.getElementById('input').value;
+      const win = window.open();
+      win.document.body.style.margin='0';
+      win.document.body.style.height='100vh';
+      const iframe = win.document.createElement('iframe');
+      iframe.style.border='none';
+      iframe.style.width='100%';
+      iframe.style.height='100%';
       iframe.src = url;
       win.document.body.appendChild(iframe);
     }
-  </scr` + `ipt>
-  <input type="text" class="text-box" value="https://www.google.com/" placeholder="https://google.com" id='input' autofocus>
-  <button class="creat-btn" onclick='create()'>Create!</button>
-</body>
-</html>`;
+    function randomBg(){
+      const colors = ['#f5e0ff','#ffe5e5','#e2e3e5','#fff3cd'];
+      document.body.style.background = colors[Math.floor(Math.random()*colors.length)];
+    }
+    // demo actions
+    function downloadCSV(){
+      const csvContent = "data:text/csv;charset=utf-8,"
+        + "ID,Name,Score\\n1,John,98\\n2,Mary,95";
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "report.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    function copyLink(){
+      const text = window.location.href;
+      navigator.clipboard.writeText(text).then(()=>alert("Link copied!"));
+    }
+    // FAQ toggle
+    window.addEventListener('DOMContentLoaded',()=>{[
+      ...document.querySelectorAll('.faq h4')
+    ].forEach(h4=>h4.addEventListener('click', e=>{
+      const content = e.target.nextElementSibling;
+      content.style.display = content.style.display==='none'?'block':'none';
+    }))});
+  <\/script>
 
-/* ---------- 4. Authentication handling --------------------------- */
-const btn = document.getElementById('authBtn');
-const msg = document.getElementById('msg');
+  <input type="text" id="input" class="text-box"
+         value="https://fischy6734.github.io/BM/"
+         placeholder="https://fischy6734.github.io/BM/" autofocus>
+  <button onClick="create()">Create Iframe</button>
+  ${actions}
+  ${[ 'Premium', 'Enterprise', 'Unlimited', 'Guru', 'Overlord' ].includes(tier) ?
+      `<button class="bgToggle" onclick="randomBg()">Change Background</button>` : ''}
+  ${tier==='Basic' || tier==='Standard' ?
+      `<button class="upgrade" onclick="alert('pls email me if you want to upgrade.')">
+        Upgrade Your Tier</button>` : ''}
+  ${tier==='Friend' || tier==='Friend' ?
+      `<button class="upgrade" onclick="alert('pls email me if you want to upgrade.')">
+        Get Your Own Key Here!</button>` : ''}`;
+}
 
-btn.addEventListener('click', async () => {
-  msg.className = '';   // clear previous message
+/* ---------- 7. Authentication handler ---------- */
+const btn=document.getElementById('authBtn');
+const msg=document.getElementById('msg');
+const keyInput=document.getElementById('keyInput');
 
-  const rawKey = (document.getElementById('keyInput').value || '').trim();
-  if (!rawKey) {
-    msg.className = 'error';
-    msg.textContent = 'Please enter a key.';
+btn.addEventListener('click', async () =>{
+  msg.className=''; msg.textContent='';
+  const raw=keyInput.value.trim();
+  if (!raw){ msg.className='error'; msg.textContent='Enter a key.'; return;}
+  const key=raw.toLowerCase();
+
+  let matched=null;
+  for (const {name,tier} of authorised){
+    const h1=await sha256(name);
+    const h2=await sha256(name.toLowerCase());
+    if (h1===key || h2===key){ matched={name,tier}; break;}
+  }
+
+  if (!matched){
+    msg.className='error';
+    msg.textContent='❌ Wrong key. You are not authorised.';
     return;
   }
 
-  const enteredKey = rawKey.toLowerCase();   // SHA‑256 hex is lower‑case
+  document.open();
+  document.write(makeTargetPage(matched.name, matched.tier));
+  document.close();
+});
 
-  /* try both the stored name and a lower‑cased variant */
-  for (const name of authorisedNames) {
-    const hash1 = await sha256(name);
-    const hash2 = await sha256(name.toLowerCase());
-    if (hash1 === enteredKey || hash2 === enteredKey) {
-      /* ---- success: replace the whole page with targetPage ---- */
-      document.open();          // start a fresh document
-      document.write(targetPage); // write the new page
-      document.close();         // finish the write
-      return;
-    }
-  }
+/* ---------- 8. Helper: test key generator (shows in console) ---------- */
+async function genTestKey(name){
+  const k = await sha256(name);
+  console.log(`> key for ${name}: ${k}`);
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  authorised.forEach(e=>genTestKey(e.name));
+});
 
-  /* ------- no match ------- */
-  msg.className = 'error';
-  msg.textContent = '❌ Wrong key. You are not authorised.';
+/* click 'Enter' to submit */
+keyInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){btn.click(); e.preventDefault();}
 });
 </script>
 </body>
