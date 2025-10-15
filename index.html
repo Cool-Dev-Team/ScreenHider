@@ -1,64 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <script>
-        // Create Blob with the about:blank generator code
-        const blobContent = `<!DOCTYPE html>
-<html>
-    <head>
-        <title>about:blank cool</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                text-align: center;
-                padding: 20px;
-                background: #f0f0f0;
-            }
-            input, button {
-                padding: 10px;
-                margin: 5px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-            button {
-                background: #007acc;
-                color: white;
-                cursor: pointer;
-            }
-            button:hover {
-                background: #005a9e;
-            }
-        </style>
-    </head>
-    <body>
-        <h2>about:blank SCREEN HIDER</h2>
-        <p>SOME URLS DONT WORK!!!!!!!!!!!!!</p>
-        <input type="text" value="https://fischy6734.github.io/BM/" placeholder="https://fischy6734.github.io/BM/" id='input' autofocus>
-        <button onclick='create()'>Create!</button>
-        
-        <script>
-        function create() {
-            var url = document.getElementById('input').value;
-            var win = window.open();
-            win.document.body.style.margin = '0';
-            win.document.body.style.height = '100vh';
-            var iframe = win.document.createElement('iframe');
-            iframe.style.border = 'none';
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.margin = '0';
-            iframe.src = url;
-            win.document.body.appendChild(iframe);
-        }
-        <\/script>
-    </body>
-</html>`;
-        
-        const blob = new Blob([blobContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        window.location.replace(url);
-    </script>
+<meta charset="utf-8">
+<title>Key‑Auth via Name List (no visible list)</title>
+<style>
+  body{font-family:Arial,sans-serif;display:flex;justify-content:center;
+       align-items:center;height:100vh;margin:0;background:#f4f4f4;}
+  .card{background:white;border:1px solid #ccc;border-radius:8px;
+        width:350px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+  h2{margin-top:0;text-align:center;}
+  h3{margin-top:0;text-align:center;}
+  input{width:100%;padding:10px;margin:10px 0;
+        box-sizing:border-box;border:1px solid #ccc;border-radius:4px;}
+  button{width:100%;padding:10px;border:none;border-radius:4px;
+        background:#28a745;color:white;cursor:pointer;}
+  button:hover{background:#218838;}
+  #msg{margin-top:12px;padding:10px;border-radius:4px;}
+  .error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}
+</style>
 </head>
 <body>
+
+<div class="card" id="auth">
+  <h2>Authenticate</h2>
+  <h3>If you want a key, email  </h3>
+  <h3> 5137455873@student.cms.k12.nc.us </h3>
+  <h3> (I NEED A KEY) and he will get back to you as soon as he can</h3>
+  <input type="text" id="keyInput" placeholder="Enter the key you received">
+  <button id="authBtn">Authenticate</button>
+  <div id="msg"></div>
+</div>
+
+<script>
+/* ---------- 1. Hidden list of authorised names -------------------- */
+const authorisedNames = [
+  "Fischer",
+  "Colton",
+  "Brantley",
+  "Free-Key",
+  "Eve"
+];
+
+/* ---------- 2. SHA‑256 helper ------------------------------------ */
+async function sha256(str) {
+  const encoder = new TextEncoder();
+  /* note: the string must be the ASCII hyphen, not a dash/‑ character */
+  const hash = await crypto.subtle.digest('SHA-256', encoder.encode(str));
+  return Array.from(new Uint8Array(hash))
+      .map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ---------- 3. The page to show after successful login --------- */
+const targetPage = `<!DOCTYPE html>
+<html>
+<head>
+  <title>about:blank | 3kh0</title>
+</head>
+<style>
+  .body { align-items: center; }
+  .text-box { font-size: 40px; align-items: center; border-radius: 15px; background-color: lightblue; border: 2px solid blue; }
+  .creat-btn { font-size: 40px; align-items: center; background-color: lightblue; border: 2px solid blue; }
+  button:hover { background-color: lightGreen; }
+</style>
+<body>
+  <script>
+    function create() {
+      var url = document.getElementById('input').value;
+      var win = window.open();
+      win.document.body.style.margin = '0';
+      win.document.body.style.height = '100vh';
+      var iframe = win.document.createElement('iframe');
+      iframe.style.border = 'none';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.margin = '0';
+      iframe.src = url;
+      win.document.body.appendChild(iframe);
+    }
+  </scr` + `ipt>
+  <input type="text" class="text-box" value="https://www.google.com/" placeholder="https://google.com" id='input' autofocus>
+  <button class="creat-btn" onclick='create()'>Create!</button>
+</body>
+</html>`;
+
+/* ---------- 4. Authentication handling --------------------------- */
+const btn = document.getElementById('authBtn');
+const msg = document.getElementById('msg');
+
+btn.addEventListener('click', async () => {
+  msg.className = '';   // clear previous message
+
+  const rawKey = (document.getElementById('keyInput').value || '').trim();
+  if (!rawKey) {
+    msg.className = 'error';
+    msg.textContent = 'Please enter a key.';
+    return;
+  }
+
+  const enteredKey = rawKey.toLowerCase();   // SHA‑256 hex is lower‑case
+
+  /* try both the stored name and a lower‑cased variant */
+  for (const name of authorisedNames) {
+    const hash1 = await sha256(name);
+    const hash2 = await sha256(name.toLowerCase());
+    if (hash1 === enteredKey || hash2 === enteredKey) {
+      /* ---- success: replace the whole page with targetPage ---- */
+      document.open();          // start a fresh document
+      document.write(targetPage); // write the new page
+      document.close();         // finish the write
+      return;
+    }
+  }
+
+  /* ------- no match ------- */
+  msg.className = 'error';
+  msg.textContent = '❌ Wrong key. You are not authorised.';
+});
+</script>
 </body>
 </html>
