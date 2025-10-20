@@ -102,6 +102,17 @@ input.urlInput{
 .tier.gold{background:#ffc107;}
 .tier.silver{background:#cfd8dc;}
 .tier.bronze{background:#795548;}
+.tier.Owner{background:#66e3ff; font-size: 80px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;}
+.tier.Owner:hover {
+      text-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff, 0 0 50px #0ff;
+      transform: scale(1.05);
+      transition: all 0.3s ease;
+  }
 .features{
   width:90%;text-align:left;max-width:500px;
   background:var(--gray);border-radius:6px;padding:1rem;
@@ -178,13 +189,15 @@ const RANKS = [
    features:["Basic analytics", "Community support"]},
   {id:"bronze",   name:"Bronze",
    features:["Basic modules", "Community forums"]},
+  {id:"Owner",   name:"Owner",
+   features:["Basic modules", "Community forums"]},
 ];
 const USERS = [
-  {name:"Fischer", tier:"overlord", rank:"overlord"},
-  {name:"Colton",  tier:"overlord", rank:"overlord"},
+  {name:"Fischer", tier:"Owner", rank:"Owner"},
+  {name:"Colton",  tier:"Owner", rank:"Owner"},
   {name:"Brantley",tier:"overlord", rank:"overlord"},
   {name:"Joseph",  tier:"overlord", rank:"overlord"},
-  {name:"Cove",    tier:"overlord", rank:"overlord"},
+  {name:"Cove",    tier:"Owner", rank:"Owner"},
   {name:"Breilyn", tier:"standard", rank:"standard"},
   /* Example of a custom rank */
   {name:"Alex",    tier:"friend",   rank:"friend"},
@@ -311,7 +324,7 @@ async function showWelcome(user, loggedAsFriend){
   `;
 
   /* -------- watermark logic -------- */
-  const goodRanks = ['overlord'];           // ranks that can toggle watermark
+  const goodRanks = ['overlord', 'Owner'];           // ranks that can toggle watermark
   const isGood = goodRanks.includes(user.rank);
   let wmEnabled = false;                     // initial value: off
 
@@ -417,6 +430,8 @@ window.addEventListener('load', () => {
   else updateThemeIcon();
 });
 document.getElementById('themeToggle').onclick = toggleTheme;
+
+
 
 /* ------------------------------------------ */
 /* 11. Hook up event listeners */
