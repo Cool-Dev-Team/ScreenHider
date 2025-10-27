@@ -28,6 +28,7 @@ body.dark{
   --white:#222;
   --gray:#333;
 }
+
 /* ---------------------------------------------------- */
 /* 2. Reset & base layout */
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -118,10 +119,10 @@ text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;}
 .keyItem button:hover{background:#d32f2f;}
 /* ---------------------------------------------------- */
 /* 7. Server status & updates */
-#serverStatus, #serverUpdates{background:#f0f0f0;border-radius:6px;padding:1rem;
+#serverStatus, #serverUpdates{background:var(--gray);border-radius:6px;padding:1rem;
  margin-top:1rem;width:90%;max-width:440px;}
 #serverUpdates ul{list-style:none;padding:0;}
-#serverUpdates li{margin-bottom:.5rem;padding:.5rem;background:#fff;
+#serverUpdates li{margin-bottom:.5rem;padding:.5rem;background:var(--white);
  border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1);}
 </style>
 </head>
@@ -166,10 +167,10 @@ text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;}
 </div>
 
 <script>
-const SERVER_URL = "https://instructors-rear-recovery-lips.trycloudflare.com";
-let keyList = [];          // will be filled by fetchKeyList()
+const SERVER_URL = "https://instructors-rear-recovery-lips.trycloudflare.com"; // <-- change if needed
+let keyList = [];
 
-// ---- RANK data (needed by showWelcome) ----
+/* ---- RANK data (needed by showWelcome) ---- */
 const RANKS = [
   {id:"overlord", name:"Overlord",
    features:["Unlimited access", "Priority support", "2FA by default", "Custom branding"]},
@@ -409,6 +410,7 @@ async function fetchKeyList(){
     const res = await fetch(SERVER_URL+"/api/keys", {mode:'cors'});
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     keyList = await res.json();           // [{main,friend,name,rank,tier}, …]
+    console.log('Key list fetched:', keyList);   // <- useful debug line
   }catch(e){
     console.error('Unable to fetch key list:', e);
     msg.className='error';
