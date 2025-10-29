@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <title>Screen Hider</title>
 <link href="https://fonts.cdnfonts.com/css/inter" rel="stylesheet">
-
 <style>
 /* ---------------------------------------------------- */
 /* 1. Global styling & colours */
@@ -28,7 +27,6 @@ body.dark{
   --white:#222;
   --gray:#333;
 }
-
 /* ---------------------------------------------------- */
 /* 2. Reset & base layout */
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -72,8 +70,9 @@ button.smallBtn:hover{background:#5a6268;}
 /* 4. Loading spinner */
 #spinner{display:none;margin:1rem auto;text-align:center;}
 @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
 /* ---------------------------------------------------- */
-/* 5. Post‑login wrapper */
+/* 5. Post‑login wrapper & vault */
 #wrapper{max-width:var(--wrapper);margin:auto;display:flex;
  flex-direction:column;align-items:center;gap:1rem;}
 pre{background:var(--gray);border-radius:4px;padding:.5rem;
@@ -88,22 +87,19 @@ input.urlInput{width:90%;border-radius:4px;border:1px solid #ccc;
 .tier.gold{background:#ffc107;}
 .tier.silver{background:#cfd8dc;}
 .tier.bronze{background:#795548;}
-.tier.Owner{background:#66e3ff; font-size: 80px;
-font-weight: bold;
+.tier.Owner{background:#66e3ff;font-size:80px;
+font-weight:bold;
 background: linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%);
 -webkit-background-clip: text;
 -webkit-text-fill-color: transparent;
-text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;}
-.tier.Owner:hover{text-shadow: 0 0 10px #0ff, 0 0 20px #0ff,
-  0 0 30px #0ff, 0 0 50px #0ff;transform:scale(1.05);
-  transition:all .3s ease;}
+text-shadow: 0 0 5px #000000,0 0 10px #000000,0 0 15px #111;}
+.tier.Owner:hover{text-shadow:0 0 10px #0ff,0 0 20px #0ff,0 0 30px #0ff,0 0 50px #0ff;transform:scale(1.05);
+transition:all .3s ease;}
 .features{width:90%;text-align:left;max-width:500px;
  background:var(--gray);border-radius:6px;padding:1rem;
  box-shadow:0 2x8px rgba(0,0,0,.05);}
 .features h4{margin-bottom:.5rem;}
 .features ul{margin:0;}
-/* ---------------------------------------------------- */
-/* 6. Key Vault styling */
 #vault{background:#f9f9f9;border-radius:6px;padding:1rem;
  box-shadow:0 2px 6px rgba(0,0,0,.1);display:none;max-width:440px;}
 #vault h3{margin-bottom:.8rem;font-size:1.2rem;color:var(--primary);}
@@ -117,8 +113,9 @@ text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;}
 .keyItem button{background:#e53935;color:#fff;font-size:.7rem;padding:.2rem .4rem;
  border:none;border-radius:4px;cursor:pointer;}
 .keyItem button:hover{background:#d32f2f;}
+
 /* ---------------------------------------------------- */
-/* 7. Server status & updates */
+/* 6. Server status & updates */
 #serverStatus, #serverUpdates{background:var(--gray);border-radius:6px;padding:1rem;
  margin-top:1rem;width:90%;max-width:440px;}
 #serverUpdates ul{list-style:none;padding:0;}
@@ -127,29 +124,24 @@ text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;}
 </style>
 </head>
 <body>
-<!-- ------------------------------------------ -->
-<!-- 1. Login card (shown before auth) -->
+<!-- Login -->
 <div class="card" id="auth">
   <h2>Authenticate</h2>
   <button id="themeToggle" class="smallBtn" title="Toggle theme">🌙</button>
-  <h3>If you want a key, email</h3>
-  <h3>5137455873@student.cms.k12.nc.us</h3>
-  <h3>(I NEED A KEY) and he will get back to you as soon as he can</h3>
+  <h3>If you want a key, email 5137455873@student.cms.k12.nc.us</h3>
   <input type="text" id="keyInput" class="input" placeholder="Enter your key">
   <button id="authBtn" class="btn">Authenticate</button>
   <div id="msg" role="alert"></div>
 </div>
 
-<!-- ------------------------------------------ -->
-<!-- 2. Loading spinner -->
+<!-- Loading spinner -->
 <div id="spinner">
   <svg width="32" height="32" viewBox="0 0 50 50" style="animation:spin .7s linear infinite;">
     <circle cx="25" cy="25" r="20" fill="none" stroke="#28a745" stroke-width="6"/>
   </svg>
 </div>
 
-<!-- ------------------------------------------ -->
-<!-- 3. Server status -->
+<!-- Server status -->
 <div id="serverStatus" style="display:none;">
   <h3>Server Status</h3>
   <p>Health: <span id="srvHealth"></span></p>
@@ -159,37 +151,29 @@ text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;}
   <p>User Count: <span id="srvUsers"></span></p>
 </div>
 
-<!-- ------------------------------------------ -->
-<!-- 4. Server updates -->
+<!-- Server updates -->
 <div id="serverUpdates" style="display:none;">
   <h3>Server Updates</h3>
   <ul id="updatesList"></ul>
 </div>
 
 <script>
-const SERVER_URL = "https://drilling-pharmacology-counter-commercial.trycloudflare.com"; // <-- change if needed
+const SERVER_URL = "https://putting-die-discover-kitchen.trycloudflare.com";
 let keyList = [];
+let currentKey = null; // authenticated key
 
-/* ---- RANK data (needed by showWelcome) ---- */
 const RANKS = [
-  {id:"overlord", name:"Overlord",
-   features:["Unlimited access", "Priority support", "2FA by default", "Custom branding"]},
-  {id:"standard", name:"Standard",
-   features:["Core modules", "48‑h support", "Basic analytics"]},
-  {id:"friend",   name:"Friend",
-   features:["Limited modules", "Community forums", "No priority"]},
-  {id:"gold",     name:"Gold",
-   features:["Priority support", "Advanced analytics"]},
-  {id:"silver",   name:"Silver",
-   features:["Basic analytics", "Community support"]},
-  {id:"bronze",   name:"Bronze",
-   features:["Basic modules", "Community forums"]},
-  {id:"Owner",   name:"Owner",
-   features:["Basic modules", "Community forums"]},
+  {id:"overlord", name:"Overlord", features:["Unlimited access","Priority support","2FA by default","Custom branding"]},
+  {id:"standard", name:"Standard", features:["Core modules","48‑h support","Basic analytics"]},
+  {id:"friend", name:"Friend", features:["Limited modules","Community forums","No priority"]},
+  {id:"gold", name:"Gold", features:["Priority support","Advanced analytics"]},
+  {id:"silver", name:"Silver", features:["Basic analytics","Community support"]},
+  {id:"bronze", name:"Bronze", features:["Basic modules","Community forums"]},
+  {id:"Owner", name:"Owner", features:["Basic modules","Community forums"]},
 ];
 
-/* -------------------------------------------------------------------------- */
-/* 4. SHA‑256 helper (async) */
+// --------------------------------------------------------------------------
+// SHA-256 helper
 async function sha256Hex(str){
   const buf = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest('SHA-256', buf);
@@ -197,21 +181,19 @@ async function sha256Hex(str){
     .map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-/* -------------------------------------------------------------------------- */
-/* 1. Fetch server status & updates (unchanged) */
+// --------------------------------------------------------------------------
+// Fetch server status & updates
 async function fetchStatus(){
   try{
     const res = await fetch(SERVER_URL+"/api/status");
     const data = await res.json();
     document.getElementById("srvHealth").textContent = data.health;
-    document.getElementById("srvUptime").textContent = data.uptime_seconds + "s";
+    document.getElementById("srvUptime").textContent = data.uptime_seconds+"s";
     document.getElementById("srvCPU").textContent = data.cpu_percent;
     document.getElementById("srvMem").textContent = data.memory_percent;
     document.getElementById("srvUsers").textContent = data.user_count;
     document.getElementById("serverStatus").style.display="block";
-  }catch(e){
-    console.log("Cannot reach server:", e);
-  }
+  }catch(e){ console.log("Cannot reach server:", e); }
 }
 async function fetchUpdates(){
   try{
@@ -220,27 +202,26 @@ async function fetchUpdates(){
     const ul = document.getElementById("updatesList");
     ul.innerHTML="";
     data.slice().reverse().forEach(u=>{
-      const li = document.createElement("li");
+      const li=document.createElement("li");
       li.innerHTML=`<strong>${u.title}</strong><br>${u.message}`;
       ul.appendChild(li);
     });
     document.getElementById("serverUpdates").style.display="block";
-  }catch(e){
-    console.log("Cannot fetch updates:", e);
-  }
+  }catch(e){ console.log("Cannot fetch updates:", e); }
 }
 setInterval(fetchStatus,5000);
 setInterval(fetchUpdates,10000);
 fetchStatus();
 fetchUpdates();
 
-/* -------------------------------------------------------------------------- */
-/* 5. Key Vault (client‑side only) */
+// --------------------------------------------------------------------------
+// Key Vault
 function loadVault(){ return localStorage.getItem('keyVault')? JSON.parse(localStorage.getItem('keyVault')): [];}
 function saveVault(v){ localStorage.setItem('keyVault',JSON.stringify(v));}
 function renderVault(){
   const vault = loadVault();
-  const ul    = document.getElementById('keyList');
+  const ul = document.getElementById('keyList');
+  if(!ul) return;
   ul.innerHTML='';
   vault.forEach((k, idx)=>{
     const li=document.createElement('li');li.className='keyItem';
@@ -255,95 +236,66 @@ function promptAddKey(){
   if (!raw) return;
   const name = prompt('Optional: give this key a name')||'';
   if (!/^[a-f0-9]{64}$/.test(raw)){
-    alert('Invalid key – it must be 64 hexadecimal characters.');
+    alert('Invalid key – must be 64 hex characters.');
     return;
   }
   const tier = raw.split('_')[0]||'Standard';
   const vault = loadVault();
-  vault.push({hash:raw, name, tier, addedAt:Date.now()});
+  vault.push({hash:raw,name,tier,addedAt:Date.now()});
   saveVault(vault);
   renderVault();
 }
 function deleteKey(i){
   if (!confirm('Delete this key?')) return;
-  const vault=loadVault();
+  const vault = loadVault();
   vault.splice(i,1);
   saveVault(vault);
   renderVault();
 }
 
-/* -------------------------------------------------------------------------- */
-/* 6. Open arbitrary URL in about:blank tab (unchanged) */
+// --------------------------------------------------------------------------
+// Open URL in about:blank
 function openCustomPage(url, watermarkEnabled, watermarkRank){
-  if (!url){ alert('Please enter a URL first.'); return;}
-  const win = window.open('about:blank','_blank');
-  if (!win){
-    alert('Pop‑ups are blocked. Allow them to continue.');
-    return;
-  }
-  const watermarkHTML = watermarkEnabled ?
-    `<div id="wmContainer">
-       <div id="wm">FISCHY HIDER</div>
-       <span class="wmRank">${watermarkRank}</span>
-     </div>` : '';
-
+  if(!url){alert('Enter a URL.');return;}
+  const win=window.open('about:blank','_blank');
+  if(!win){alert('Pop-ups blocked.');return;}
+  const watermarkHTML = watermarkEnabled?`
+    <div id="wmContainer">
+      <div id="wm">FISCHY HIDER</div>
+      <span class="wmRank">${watermarkRank}</span>
+    </div>`:'';
   win.document.write(`
     <!doctype html>
-    <html lang="en"><head>
-      <meta charset="utf-8">
-      <title>cms.instructure.com</title>
-      <style>
-        html,body{margin:0;padding:0;font-family:Inter,sans-serif;background:#fff;}
-        iframe{border:none;width:100%;height:100vh;}
-        #wmContainer{
-          position:fixed;top:50%;right:10px;transform:translateY(-50%);
-          display:flex;align-items:center;z-index:9999;
-        }
-        #wm{
-          font-size:48px;color:rgba(200,200,200,.6);
-          transform:rotate(90deg);font-weight:bold;
-        }
-        .wmRank{
-          font-size:20px;color:#222;margin-left:15px;
-          transform:rotate(-90deg);
-        }
-      </style>
-    </head>
-    <body>
-      ${watermarkHTML}
-      <iframe src="${url}"></iframe>
-    </body>
-    </html>
+    <html lang="en"><head><meta charset="utf-8"><title>cms.instructure.com</title>
+    <style>
+      html,body{margin:0;padding:0;font-family:Inter,sans-serif;background:#fff;}
+      iframe{border:none;width:100%;height:100vh;}
+      #wmContainer{position:fixed;top:50%;right:10px;transform:translateY(-50%);
+        display:flex;align-items:center;z-index:9999;}
+      #wm{font-size:48px;color:rgba(200,200,200,.6);transform:rotate(90deg);font-weight:bold;}
+      .wmRank{font-size:20px;color:#222;margin-left:15px;transform:rotate(-90deg);}
+    </style></head>
+    <body>${watermarkHTML}<iframe src="${url}"></iframe></body></html>
   `);
   win.document.close();
 }
 
-/* -------------------------------------------------------------------------- */
-/* 7. Show welcome page after auth */
+// --------------------------------------------------------------------------
+// Show welcome page
 async function showWelcome(userData, loggedAsFriend){
   const friendKey = await sha256Hex(userData.name+"_Friend_Key");
-  const title     = loggedAsFriend ? `${userData.name} – Friend` : userData.name;
-  const rank  = RANKS.find(r=>r.id===userData.rank)||{name:"Unknown",features:[]};
-
-  const keyBlock = loggedAsFriend ? '' : `
+  const title = loggedAsFriend?`${userData.name} – Friend`:userData.name;
+  const rank = RANKS.find(r=>r.id===userData.rank)||{name:"Unknown",features:[]};
+  const keyBlock = loggedAsFriend?'':`
     <h3>Your key (Friend key to use):</h3>
     <pre id="friendKey">${friendKey}</pre>
-    <button class="smallBtn" id="copyFriendBtn">Copy Key</button>
-  `;
+    <button class="smallBtn" id="copyFriendBtn">Copy Key</button>`;
   const featList = rank.features.map(f=>`<li>${f}</li>`).join('');
-  const featureBlock = `
-    <div class="features">
-      <h4>Tier Features (${rank.name})</h4>
-      <ul>${featList}</ul>
-    </div>
-  `;
+  const featureBlock = `<div class="features"><h4>Tier Features (${rank.name})</h4><ul>${featList}</ul></div>`;
+  const goodRanks=['overlord','Owner'];
+  let wmEnabled=false;
 
-  /* -------- watermark logic -------- */
-  const goodRanks = ['overlord', 'Owner'];           // ranks that can toggle watermark
-  const isGood = goodRanks.includes(userData.rank);
-  let wmEnabled = false;
-
-  document.body.innerHTML = `
+  document.body.innerHTML=`
     <div id="wrapper">
       <h1>Welcome, ${title}!</h1>
       <h2>Tier: <span class="tier ${userData.rank}">${rank.name}</span></h2>
@@ -351,7 +303,7 @@ async function showWelcome(userData, loggedAsFriend){
       <input type="text" id="urlInput" class="urlInput" placeholder="Enter a URL to view in about:blank">
       <button class="smallBtn" id="openUrlBtn">press me to Hide it</button>
       <div style="margin-top:1rem;">
-        <p>This rank ${isGood?'can toggle the watermark':'always shows a watermark'}.</p>
+        <p>This rank ${goodRanks.includes(userData.rank)?'can toggle the watermark':'always shows a watermark'}.</p>
       </div>
       ${featureBlock}
       <button class="smallBtn" id="againBtn">Authenticate again</button>
@@ -363,117 +315,89 @@ async function showWelcome(userData, loggedAsFriend){
     </div>
   `;
 
-  if (!isGood){
-    /* no toggle – watermark will always be on */
-  }
-
-  if (isGood){
+  if(goodRanks.includes(userData.rank)){
     const toggleBtn=document.createElement('button');
     toggleBtn.className='smallBtn';
     toggleBtn.textContent='Show Watermark';
-    toggleBtn.onclick=()=>{
-      wmEnabled=!wmEnabled;
-      toggleBtn.textContent= wmEnabled? 'Hide Watermark':'Show Watermark';
-    };
+    toggleBtn.onclick=()=>{ wmEnabled=!wmEnabled; toggleBtn.textContent=wmEnabled?'Hide Watermark':'Show Watermark'; };
     document.getElementById('wrapper').appendChild(toggleBtn);
   }
 
-  if (!loggedAsFriend){
-    document.getElementById('copyFriendBtn').onclick=()=>{
-      navigator.clipboard.writeText(friendKey)
-        .then(()=>alert('Key copied!'));
-    };
+  if(!loggedAsFriend){
+    document.getElementById('copyFriendBtn').onclick=()=>navigator.clipboard.writeText(friendKey).then(()=>alert('Key copied!'));
   }
 
-  document.getElementById('openUrlBtn').onclick=()=>{
+  document.getElementById('openUrlBtn').onclick=()=>{ 
     const url=document.getElementById('urlInput').value.trim();
-    openCustomPage(url, !isGood || wmEnabled, rank.name);
+    openCustomPage(url, !goodRanks.includes(userData.rank)||wmEnabled, rank.name);
   };
 
   renderVault();
   document.getElementById('addKeyBtn').onclick=promptAddKey;
   document.getElementById('keyList').addEventListener('click',e=>{
-    if (e.target.classList.contains('delBtn')){
-      deleteKey(parseInt(e.target.dataset.i));
-    }
+    if(e.target.classList.contains('delBtn')) deleteKey(parseInt(e.target.dataset.i));
   });
   document.getElementById('againBtn').onclick=()=>location.reload();
 }
 
-/* -------------------------------------------------------------------------- */
-/* 8. Login logic – fetch key list each time */
+// --------------------------------------------------------------------------
+// Fetch key list
 async function fetchKeyList(){
   const sp = document.getElementById('spinner');
   const msg= document.getElementById('msg');
   sp.style.display='block';
   try{
-    const res = await fetch(SERVER_URL+"/api/keys", {mode:'cors'});
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    keyList = await res.json();           // [{main,friend,name,rank,tier}, …]
-    console.log('Key list fetched:', keyList);   // <- useful debug line
+    const res = await fetch(SERVER_URL+"/api/keys",{mode:'cors'});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    keyList = await res.json();
+    console.log('Key list fetched:', keyList);
   }catch(e){
     console.error('Unable to fetch key list:', e);
-    msg.className='error';
-    msg.textContent='Unable to reach key list. Please try again.';
-  }finally{
-    sp.style.display='none';
-  }
+    msg.className='error'; msg.textContent='Unable to reach key list. Try again.';
+  }finally{ sp.style.display='none'; }
 }
 
+// --------------------------------------------------------------------------
+// Live key revocation
+async function liveKeyCheck(){
+  if(!currentKey) return;
+  try{
+    const res = await fetch(SERVER_URL+"/api/keys");
+    const latestKeys = await res.json();
+    const found = latestKeys.find(k=>k.main===currentKey||k.friend===currentKey);
+    if(!found){
+      alert("Your key has been removed! Logging out.");
+      localStorage.removeItem('keyVault');
+      location.reload();
+    }
+  }catch(e){ console.log("Key check failed:", e); }
+}
+setInterval(liveKeyCheck,3000);
+
+// --------------------------------------------------------------------------
+// Login logic
 async function doLogin(){
   const key = document.getElementById('keyInput').value.trim();
   const msg = document.getElementById('msg');
-
-  if (!key){
-    msg.className='error';
-    msg.textContent='Enter a key.';
-    return;
-  }
+  if(!key){ msg.className='error'; msg.textContent='Enter a key.'; return; }
   msg.textContent=''; msg.className='';
-
-  /* fetch the key list first */
   await fetchKeyList();
-
-  if (!Array.isArray(keyList) || keyList.length===0){
-    msg.className='error';
-    msg.textContent='Key list is empty. Try again later.';
-    return;
-  }
-
-  /* find the key in the list */
-  const matched = keyList.find(k => k.main===key || k.friend===key);
-
-  if (!matched){
-    msg.className='error';
-    msg.textContent='Unknown key – not in the list.';
-    return;
-  }
-
-  /* success – show the full dashboard page */
-  showWelcome(matched, false);
+  if(!Array.isArray(keyList)||keyList.length===0){ msg.className='error'; msg.textContent='Key list empty.'; return; }
+  const matched = keyList.find(k=>k.main===key||k.friend===key);
+  if(!matched){ msg.className='error'; msg.textContent='Unknown key.'; return; }
+  currentKey = key;
+  showWelcome(matched,false);
 }
 
 document.getElementById('authBtn').onclick=doLogin;
-document.getElementById('keyInput').addEventListener('keydown',e=>{
-  if (e.key==='Enter'){doLogin();e.preventDefault();}
-});
+document.getElementById('keyInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){doLogin(); e.preventDefault();} });
 
-/* -------------------------------------------------------------------------- */
-/* 10. Theme switcher (unchanged) */
-function updateThemeIcon(){
-  const icon = document.body.classList.contains('dark') ? '☀️' : '🌙';
-  document.getElementById('themeToggle').textContent = icon;
-}
-function toggleTheme(){
-  document.body.classList.toggle('dark');
-  localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-  updateThemeIcon();
-}
-window.addEventListener('load', () => {
-  if(localStorage.getItem('darkMode')==='true') toggleTheme();
-  else updateThemeIcon();
-});
-document.getElementById('themeToggle').onclick = toggleTheme;
+// --------------------------------------------------------------------------
+// Theme switcher
+function updateThemeIcon(){ document.getElementById('themeToggle').textContent = document.body.classList.contains('dark')?'☀️':'🌙'; }
+function toggleTheme(){ document.body.classList.toggle('dark'); localStorage.setItem('darkMode',document.body.classList.contains('dark')); updateThemeIcon(); }
+window.addEventListener('load',()=>{ if(localStorage.getItem('darkMode')==='true') toggleTheme(); else updateThemeIcon(); });
+document.getElementById('themeToggle').onclick=toggleTheme;
 </script>
 </body>
 </html>
